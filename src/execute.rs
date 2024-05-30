@@ -1,4 +1,4 @@
-use std::fs::remove_file;
+use std::fs::{remove_file, remove_dir_all};
 use std::path::Path;
 
 use crate::action::ActionType;
@@ -17,7 +17,11 @@ fn execute_action(action: &Action){
         ActionType::Remove => {
             if Path::new(&action.file.path).exists() {
                 println!("Removing file: {}", action.file.path);
-                remove_file(action.file.path.clone()).unwrap();
+                let filetype = Path::new(&action.file.path).metadata().unwrap().file_type();
+                match filetype.is_dir() {
+                    true => remove_dir_all(action.file.path.clone()).unwrap(),
+                    false => remove_file(action.file.path.clone()).unwrap(),
+                }
             }
         },
     }
@@ -29,19 +33,31 @@ mod tests {
 use super::*;
 use crate::file::utils::test_file;
 use tempdir::TempDir;
-use std::fs::File;
+use std::fs::{File, create_dir};
 
 fn pathbuf_to_str(pb: std::path::PathBuf) -> String {
     pb.into_os_string().into_string().unwrap()
 }
 
 #[test]
-fn test_execute_action() {
+fn test_remove_file() {
     let tmp_dir = TempDir::new("example").unwrap();
     let tmp_path = tmp_dir.path().join("a");
     let file = test_file(pathbuf_to_str(tmp_path.clone()).as_str(), 1);
     let f = File::create(tmp_path.clone()).unwrap();
     drop(f);
+    assert!(tmp_path.exists());
+    let action = Action::new(ActionType::Remove, file.clone());
+    execute_action(&action);
+
+    assert!(!tmp_path.exists());
+}
+
+fn test_remove_dir() {
+    let tmp_dir = TempDir::new("example").unwrap();
+    let tmp_path = tmp_dir.path().join("a");
+    let file = test_file(pathbuf_to_str(tmp_path.clone()).as_str(), 1);
+    create_dir(tmp_path.clone()).unwrap();
     assert!(tmp_path.exists());
     let action = Action::new(ActionType::Remove, file.clone());
     execute_action(&action);
