@@ -53,6 +53,7 @@ fn test_remove_file() {
     assert!(!tmp_path.exists());
 }
 
+#[test]
 fn test_remove_dir() {
     let tmp_dir = TempDir::new("example").unwrap();
     let tmp_path = tmp_dir.path().join("a");
