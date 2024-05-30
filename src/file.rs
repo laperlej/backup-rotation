@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc, NaiveDateTime, TimeZone};
 use std::fs;
 use std::hash::{Hasher, Hash};
+use std::path::Path;
 
 use crate::dated::Dated;
 
@@ -36,7 +37,9 @@ impl File {
     }
 
     pub fn from_path(path: String, format: &str) -> Result<File, ()> {
-        let timestamp = get_date(&path, format);
+        let pathbuf = Path::new(&path);
+        let filename = pathbuf.file_name().unwrap();
+        let timestamp = get_date(filename.to_str().unwrap(), format);
         Ok(File::new(path, timestamp))
     }
 }
@@ -94,12 +97,11 @@ mod test {
     use super::*;
     use chrono::Datelike;
 
-
     #[test]
     fn test_file_from_str1() {
         let input = [
-            "pg_2024-02-17_03-00-01.tar",
-            "pg_2024-02-29_03-00-01.tar",
+            "/mnt/backup/pg_2024-02-17_03-00-01.tar",
+            "/this/is/a/test/pg_2024-02-29_03-00-01.tar",
             "pg_2024-03-12_03-00-01.tar",
             "pg_2024-03-24_03-00-01.tar",
             "pg_2024-04-05_03-00-01.tar",

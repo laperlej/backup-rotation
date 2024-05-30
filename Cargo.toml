@@ -9,8 +9,6 @@ description = "Rotate backup files based on file name pattern or last modified d
 [[bin]]
 name = "backup-rotation"
 path = "src/main.rs"
-test = false
-bench = false
 
 [dependencies]
 chrono = "0.4"
