@@ -7,7 +7,6 @@ use crate::action::Action;
 
 pub fn execute_plan(plan: Plan) {
     for action in plan {
-        println!("Executing action: {:?}", action);
         execute_action(&action);
     }
 }
