@@ -1,5 +1,6 @@
 use crate::file::File;
 
+#[derive(Debug)]
 pub struct Action {
     pub type_: ActionType,
     pub file: File,
@@ -14,6 +15,7 @@ impl Action {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum ActionType {
     Remove,
 }

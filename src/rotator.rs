@@ -3,16 +3,16 @@ use crate::rotationplan::RotationPlan;
 use chrono::{DateTime, Utc, Datelike};
 
 #[derive(Debug)]
-pub struct BackupRotator<T: Clone + Dated> {
+pub struct Rotator<T: Clone + Dated> {
     daily_max: usize,
     weekly_max: usize,
     monthly_max: usize,
     backups: RotationPlan<T>,
 }
 
-impl<T: Clone + Dated> BackupRotator<T> {
-    pub fn new(daily_max: usize, weekly_max: usize, monthly_max: usize) -> BackupRotator<T> {
-        BackupRotator {
+impl<T: Clone + Dated> Rotator<T> {
+    pub fn new(daily_max: usize, weekly_max: usize, monthly_max: usize) -> Rotator<T> {
+        Rotator {
             daily_max,
             weekly_max,
             monthly_max,
@@ -94,4 +94,27 @@ fn different_week(dt1: DateTime<Utc>, dt2: DateTime<Utc>) -> bool {
 
 fn different_day(dt1: DateTime<Utc>, dt2: DateTime<Utc>) -> bool {
     dt1.day() != dt2.day()
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::file::File;
+    use crate::file::utils::{test_file, to_files};
+
+    #[test]
+    fn rotator() {
+        let mut rotator = Rotator::<File>::new(7, 3, 1);
+        for backup in 0..34 {
+            rotator.add_backup(test_file(backup.to_string().as_str(), backup));
+        }
+        let result = rotator.get_backups();
+        let expected = RotationPlan::<File> {
+            daily: to_files(vec![25, 26, 27, 29, 30, 32, 33]),
+            weekly: to_files(vec![14, 21, 28]),
+            monthly: to_files(vec![31]),
+        };
+        assert_eq!(result, expected);
+    }
 }
