@@ -35,7 +35,7 @@ impl File {
         Ok(File::new(path, timestamp.into()))
     }
 
-    pub fn from_path(path: String, format: &String) -> Result<File, ()> {
+    pub fn from_path(path: String, format: &str) -> Result<File, ()> {
         let timestamp = get_date(&path, format);
         Ok(File::new(path, timestamp))
     }
@@ -47,18 +47,18 @@ impl Dated for File {
     }
 }
 
-fn from_naive_datetime(path: &String, format: &String) -> DateTime<Utc> {
+fn from_naive_datetime(path: &str, format: &str) -> DateTime<Utc> {
     let timestamp = NaiveDateTime::parse_from_str(path, format).unwrap();
     Utc.from_utc_datetime(&timestamp)
 }
 
-fn from_datetime(path: &String, format: &String) -> DateTime<Utc> {
+fn from_datetime(path: &str, format: &str) -> DateTime<Utc> {
     let timestamp = DateTime::parse_from_str(path, format).unwrap();
     timestamp.with_timezone(&Utc)
 
 }
 
-fn get_date(path: &String, format: &String) -> DateTime<Utc> {
+fn get_date(path: &str, format: &str) -> DateTime<Utc> {
     match format.contains("%z") {
         true => from_datetime(path, format),
         false => from_naive_datetime(path, format),

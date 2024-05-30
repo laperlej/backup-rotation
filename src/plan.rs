@@ -12,10 +12,10 @@ pub fn create_plan(before: &Vec<File>, after: &Vec<File>) -> Plan {
         }
         for file in before {
             if !seen.contains(&file.path) {
-                plan.push(Action {
-                    type_: ActionType::Remove,
-                    file: file.clone(),
-                });
+                plan.push(Action::new(
+                    ActionType::Remove,
+                    file.clone()
+                ));
             }
         }
         plan
