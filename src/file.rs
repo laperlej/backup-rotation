@@ -48,12 +48,18 @@ impl Dated for File {
 }
 
 fn from_naive_datetime(path: &str, format: &str) -> DateTime<Utc> {
-    let timestamp = NaiveDateTime::parse_from_str(path, format).unwrap();
+    let timestamp = match NaiveDateTime::parse_from_str(path, format) {
+        Ok(timestamp) => timestamp,
+        Err(_) => panic!("Failed to parse path: {}", path)
+    };
     Utc.from_utc_datetime(&timestamp)
 }
 
 fn from_datetime(path: &str, format: &str) -> DateTime<Utc> {
-    let timestamp = DateTime::parse_from_str(path, format).unwrap();
+    let timestamp = match DateTime::parse_from_str(path, format) {
+        Ok(timestamp) => timestamp,
+        Err(_) => panic!("Failed to parse path: {}", path)
+    };
     timestamp.with_timezone(&Utc)
 
 }
