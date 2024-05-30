@@ -7,7 +7,6 @@ mod execute;
 mod plan;
 mod args;
 
-use chrono::Utc;
 use file::File;
 use plan::create_plan;
 use execute::execute_plan;
@@ -28,22 +27,37 @@ fn apply_rotation(before: &Vec<File>, after: &Vec<File>) {
     execute_plan(plan);
 }
 
-fn get_backups() -> Vec<File> {
-    let mut backups = vec![];
-    for i in 0..10 {
-        let t = Utc::now();
-        let t = t + chrono::Duration::days(i);
-        let file = File::new("".to_string(), t);
-        backups.push(file);
+fn get_backups(args: Args) -> Vec<File> {
+    match args.format {
+        Some(format) => {
+            let mut files = vec![];
+            for file in &args.files {
+                let file = File::from_path(file.clone(), &format);
+                files.push(file.unwrap());
+            }
+            files
+        }
+        None => {
+            let mut files = vec![];
+            for file in &args.files {
+                let file = File::from_fs(file.clone());
+                files.push(file.unwrap());
+            }
+            files
+        }
     }
-    backups
 }
 
 fn main() {
     let args = Args::parse();
-    println!("{:?}", args.files);
-    println!("{}", args.format);
-    let backups = get_backups();
+    
+    if args.files.is_empty() {
+        println!("No files to rotate");
+        return;
+    }
+
+
+    let backups = get_backups(args);
     let backups_after_rotation = files_after_rotation(&backups);
     apply_rotation(&backups, &backups_after_rotation);
 }
@@ -52,11 +66,40 @@ fn main() {
 mod test {
     use super::*;
     use file::utils::to_files;
+    use std::fs;
 
     #[test]
-    fn get_backups_test() {
-        let backups = get_backups();
-        assert_eq!(backups.len(), 10);
+    fn get_fs_backups_test() {
+        let tmp_dir = tempdir::TempDir::new("example").unwrap();
+
+        let args = Args {
+            files: vec![
+                tmp_dir.path().join("a").to_str().unwrap().to_string(),
+                tmp_dir.path().join("b").to_str().unwrap().to_string(),
+                tmp_dir.path().join("c").to_str().unwrap().to_string(),
+            ],
+            format: None
+        };
+        for file in &args.files {
+            let f = fs::File::create(file).unwrap();
+            drop(f);
+        }
+        let backups = get_backups(args);
+        assert_eq!(backups.len(), 3);
+    }
+
+    #[test]
+    fn get_path_backups_test() {
+        let args = Args {
+            files: vec![
+                "pg_2024-02-17_03-00-01.tar".to_string(),
+                "pg_2024-02-29_03-00-01.tar".to_string(),
+                "pg_2024-03-12_03-00-01.tar".to_string(),
+            ],
+            format: Some("pg_%Y-%m-%d_%H-%M-%S.tar".to_string())
+        };
+        let backups = get_backups(args);
+        assert_eq!(backups.len(), 3);
     }
 
     #[test]

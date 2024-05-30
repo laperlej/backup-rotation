@@ -22,52 +22,22 @@ impl Hash for File {
     }
 }
 
-trait FileFactory {
-    fn create_file(&self, path: &String) -> Result<File, ()>;
-}
-
-pub struct PathFileFactory {
-    format: String,
-}
-
-impl PathFileFactory {
-    pub fn new(format: String) -> Self {
-        PathFileFactory {
-            format,
-        }
-    }
-}
-
-impl FileFactory for PathFileFactory {
-    fn create_file(&self, path: &String) -> Result<File, ()> {
-        let timestamp = get_date(path, &self.format);
-        Ok(File::new(path.to_string(), timestamp))
-    }
-
-}
-
-struct FsFileFactory {
-}
-
-impl FsFileFactory {
-    pub fn new() -> Self {
-        FsFileFactory {}
-    }
-}
-
-impl FileFactory for FsFileFactory {
-    fn create_file(&self, path: &String) -> Result<File, ()> {
-        let timestamp = fs::metadata(path).unwrap().modified().unwrap();
-        Ok(File::new(path.to_string(), timestamp.into()))
-    }
-}
-
 impl File {
     pub fn new(path: String, timestamp: DateTime<Utc>) -> File {
         File {
             path,
             timestamp,
         }
+    }
+
+    pub fn from_fs(path: String) -> Result<File, ()> {
+        let timestamp = fs::metadata(&path).unwrap().modified().unwrap();
+        Ok(File::new(path, timestamp.into()))
+    }
+
+    pub fn from_path(path: String, format: &String) -> Result<File, ()> {
+        let timestamp = get_date(&path, format);
+        Ok(File::new(path, timestamp))
     }
 }
 
@@ -152,9 +122,8 @@ mod test {
             Utc.with_ymd_and_hms(2024, 3, 25, 3, 0, 1).unwrap()
         ];
         let format = "pg_%Y-%m-%d_%H-%M-%S.tar".to_string();
-        let file_factory = PathFileFactory::new(format);
         input.iter().zip(expected.iter()).for_each(|(i, e)| {
-            let file = file_factory.create_file(&i.to_string()).unwrap();
+            let file = File::from_path(i.to_string(), &format).unwrap();
             assert_eq!(file.get_date(), *e);
         });
     }
@@ -178,9 +147,8 @@ mod test {
             Utc.with_ymd_and_hms(2024, 5, 28, 3, 0, 1).unwrap()
         ];
         let format = "influx_%Y-%m-%d_%H-%M-%S".to_string();
-        let file_factory = PathFileFactory::new(format);
         input.iter().zip(expected.iter()).for_each(|(i, e)| {
-            let file = file_factory.create_file(&i.to_string()).unwrap();
+            let file = File::from_path(i.to_string(), &format).unwrap();
             assert_eq!(file.get_date(), *e);
         });
     }
@@ -193,8 +161,7 @@ mod test {
         drop(f);
         assert!(file_path.exists());
 
-        let fs_file_factory = FsFileFactory::new();
-        let fs_file = fs_file_factory.create_file(&file_path.to_str().unwrap().to_string()).unwrap();
+        let fs_file = File::from_fs(file_path.to_str().unwrap().to_string()).unwrap();
 
         let memory_file = File::new(file_path.to_str().unwrap().to_string(), Utc::now());
         assert_eq!(fs_file.get_date().month(), memory_file.get_date().month());
