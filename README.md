@@ -33,8 +33,6 @@ backup-rotation [OPTIONS] \<FILES\>...
 
 - %z : Timezone (default is UTC)
 
-If no format is specified, the last modified date and time of the file will be used.
-
 ## Examples
 
 ```bash
