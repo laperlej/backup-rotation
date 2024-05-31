@@ -4,11 +4,11 @@
 
 ## Usage
 
-backup-rotation [OPTIONS] <FILES>...
+backup-rotation [OPTIONS] \<FILES\>...
 
 ## Arguments
 
-- <FILES>... : The list of files to rotate.
+- \<FILES\>... : The list of files to rotate.
 
 ## Options
 
@@ -22,12 +22,12 @@ backup-rotation [OPTIONS] <FILES>...
 
 ### Required
 
-%Y : Year
-%m : Month
-%d : Day
-%H : Hour
-%M : Minute
-%S : Second
+- %Y : Year
+- %m : Month
+- %d : Day
+- %H : Hour
+- %M : Minute
+- %S : Second
 
 ### Optional
 
